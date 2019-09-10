@@ -1,0 +1,147 @@
+#OBJECTIVE: To automatically extract definitions, useful info from PDF files (books, articles, etc).
+#EXTRACT TEXT FROM PDF FILE, THEN PROCESS AND ANALYSE SENTENCES TO PREDICT WHICH ARE MORE LIKELY TO INCLUDE USEFUL INFORMATION
+#AND DEFINITIONS, USING THREE METRICS: 
+#1. RATIO OF WORDS TO REDUNTANT WORDS;
+#2. RATIO OF WORDS TO COMMAS;
+3. AVERAGE LENGTH PER WORD PER SENTENCE.
+
+#ASSUMPTION: DEFINITIONS DO NOT PROPAGATE TO MULTIPLE SENTENCES.
+
+
+
+
+
+
+
+import re
+import PyPDF2
+
+path='C:/Users/theod/OneDrive - Loughborough University/Literature Review/Ballistics/'
+filename='Jonas A. Zukas - High Velocity Impact Dynamics-Wiley-Interscience (1990).pdf'
+
+pdfFileObj = open(path+filename, 'rb')
+pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+pdfReader.numPages
+pageObj = pdfReader.getPage(0)
+
+
+
+
+#totalpages=pdfReader.numPages+1
+totalpages=12
+consideredpage=12
+totparagraphs=[]
+totsentences=[]
+tottext=[]
+totnewtext=[]
+filteredtextlist=[]
+
+for npages in range(12,totalpages+1):
+    pageObj = pdfReader.getPage(npages)
+    pageObj.extractText()
+    text=pageObj.extractText()
+    
+    text=text.replace('\n','')
+    #text=text.replace(',','')
+    #text=text.replace('.','')
+    text=text.replace(':','')
+    text=text.replace('Fig','')
+    
+    tottext.append(text)    
+    
+
+    
+    
+
+tottext
+    
+    
+
+
+
+
+#toremove=re.findall('Fig. [1-9]\..\S[^A-E][^G-Z]',tottext[1])
+
+#print(totnewtext)
+    
+
+
+import nltk
+from nltk.corpus import stopwords
+from nltk.corpus import words
+stop_words=set(stopwords.words('english'))
+
+sentences=text.split('.')
+text_list=text.split()
+text_list2=text_list
+for index in range(len(text_list)):
+
+    if text_list[index].isnumeric()==True or re.search(r'[^,a-zA-Z]', text_list[index]) is not None or text_list[index] in stop_words or text_list[index].isupper(): 
+ 
+        text_list2[index]='FALSE'
+
+
+print(text_list2)
+
+
+
+#WORKS WELL TO EXTRACT CORRECTED SENTENCES 
+
+wordList=[]
+#corsentence=[]
+corsentences=[]
+for sentence in sentences:
+    #wordList.clear()
+    words=sentence.split()
+
+    for index in range(len(words)):
+        if words[index].isnumeric()==True or re.search(r'[^,a-zA-Z]', words[index]) is not None or words[index] in stop_words or words[index].isupper() or len(words[index])< 3: 
+         
+            words[index]='FALSE'
+        
+        wordList.append(words[index])
+    seperator = ' '
+    
+    #corsentence.append(wordList)
+    corsentence=seperator.join(wordList)
+    corsentences.append(corsentence)
+ 
+    
+
+
+
+#WORKS TO COUNT FALSES AND WORDS PER SENTENCE
+#WORKS TO COUNT COMMAS PER SENTENCE
+#WORKS TO COUNT AVERAGE LENGTH OF WORD PER SENTENCE
+falseCounts=[]
+RatioWpF=[] 
+RatioWpC=[]
+averageWordLen=[]
+for sentence in corsentences:
+    commaCount=0
+    wordlen=0
+    words=sentence.split()
+        
+    falseCount=words.count('FALSE')
+    
+    for word in words:
+        if re.search(',',word) is not None: commaCount+=1
+        wordlen=len(word)+wordlen
+  
+    
+    totalWords=len(words)
+    falseCounts.append(falseCount)  
+    averageWordLen.append(wordlen/totalWords)
+    if falseCount>0:
+    
+        RatioWordsPerFalse=totalWords/falseCount
+        RatioWpF.append(RatioWordsPerFalse)
+    else:  RatioWpF.append(0)
+
+    if commaCount>0:
+
+        RatioWordsPerCommaCount=totalWords/commaCount
+
+        RatioWpC.append(totalWords/commaCount)
+        
+    else: RatioWpC.append(0)        
